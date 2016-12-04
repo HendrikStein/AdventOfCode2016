@@ -12,5 +12,11 @@ public class Runner {
 					 .filter(room -> room.isValid())
 					 .mapToInt(room -> room.getSectorId())
 					 .sum());
+	
+		System.out.println("northpole object storage: "+
+					rooms.stream()
+						 .filter(room -> room.getDecryptedName().equals("northpole object storage"))
+						 .mapToInt(room -> room.getSectorId())
+						 .sum());
 	}
 }

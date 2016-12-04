@@ -8,15 +8,32 @@ import java.util.TreeSet;
 
 public class Room {
 	private String encryptedName;
+	private String originalName;
 	private int sectorId;
 	private String checksum;
 	private Map<Character, Integer> checkMap = new HashMap<>();
 
-	public Room(String encryptedName, int sectorId, String checksum) {
+	public Room(String encryptedName, String originalName, int sectorId, String checksum) {
+		this.originalName = originalName;
 		this.encryptedName = encryptedName;
 		this.sectorId = sectorId;
 		this.checksum = checksum;
 		this.buildMap();
+	}
+
+	public int getSectorId() {
+		return sectorId;
+	}
+
+	public String getDecryptedName() {
+		StringBuilder builder = new StringBuilder();
+		Decoder decoder = new Decoder(this.sectorId);
+		String[] words = this.originalName.split(" ");
+		for (String word : words) {
+			builder.append(decoder.decode(word));
+			builder.append(" ");
+		}
+		return builder.toString().trim();
 	}
 
 	private void buildMap() {
@@ -49,11 +66,8 @@ public class Room {
 		return sortedEntries;
 	}
 
-	public int getSectorId() {
-		return sectorId;
-	}
-
 	public boolean isValid() {
+		System.out.println(this.originalName);
 		SortedSet<Map.Entry<Character, Integer>> sortedSet = sort(this.checkMap);
 		int counter = 0;
 		for (Map.Entry<Character, Integer> entry : sortedSet) {
