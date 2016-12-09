@@ -2,13 +2,24 @@ package de.aoc.day8;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.BiFunction;
 
 public class Screen {
-	 private String[][] display = new String[6][50];
+	private String[][] display = new String[6][50];
 
-	private enum Axis {
-		Y, X
-	}
+	private BiFunction<String, Integer, String[][]> copyColumnFn = (columnValue, column) -> {
+		for (int y = 0; y < columnValue.length(); y++) {
+			this.display[y][column] = String.valueOf(columnValue.charAt(y));
+		}
+		return this.display;
+	};
+
+	private BiFunction<String, Integer, String[][]> copyRowFn = (rowValue, row) -> {
+		for (int x = 0; x < rowValue.length(); x++) {
+			this.display[row][x] = String.valueOf(rowValue.charAt(x));
+		}
+		return this.display;
+	};
 
 	public Screen() {
 		this.initialize();
@@ -35,9 +46,10 @@ public class Screen {
 		String row = this.getRow(instruction.getRotationEntry());
 		String rotationRow = builder.toString() + row;
 		// Copy new Column
-		this.copyRow(rotationRow.substring(0, row.length()), instruction.getRotationEntry());
-		this.copyFallOffPixel(rotationRow.substring(row.length(), rotationRow.length()), row.length(), Axis.X,
-				instruction.getRotationEntry());
+		this.display = this.copyRowFn.apply(rotationRow.substring(0, row.length()), instruction.getRotationEntry());
+		// Copy fallofPixels
+		this.copyFallOffPixel(rotationRow.substring(row.length(), rotationRow.length()), row.length(),
+				instruction.getRotationEntry(), this.copyRowFn);
 
 	}
 
@@ -65,58 +77,27 @@ public class Screen {
 		String column = this.getColumn(instruction.getRotationEntry());
 		String rotationColumn = builder.toString() + column;
 		// Copy new Column
-		this.copyColumn(rotationColumn.substring(0, column.length()), instruction.getRotationEntry());
+		this.display = this.copyColumnFn.apply(rotationColumn.substring(0, column.length()),
+				instruction.getRotationEntry());
 		// Copy fallofPixels
 		this.copyFallOffPixel(rotationColumn.substring(column.length(), rotationColumn.length()), column.length(),
-				Axis.Y, instruction.getRotationEntry());
+				instruction.getRotationEntry(), this.copyColumnFn);
 	}
 
-	private void copyFallOffPixel(String fallOffPixel, int length, Axis axis, int rotationEntry) {
+	private void copyFallOffPixel(String fallOffPixel, int length, int rotationEntry,
+			BiFunction<String, Integer, String[][]> copyFn) {
 		int rest = fallOffPixel.length() % length;
-
 		if (rest > 0) {
-			switch (axis) {
-			case X:
-				this.copyRow(fallOffPixel.substring(fallOffPixel.length() - rest, fallOffPixel.length()),
+			this.display = copyFn.apply(fallOffPixel.substring(fallOffPixel.length() - rest, fallOffPixel.length()),
+					rotationEntry);
+			if (fallOffPixel.length() > length) {
+				this.display = copyFn.apply(
+						fallOffPixel.substring(fallOffPixel.length() - (rest + length), fallOffPixel.length() - rest),
 						rotationEntry);
-				if (fallOffPixel.length() > length) {
-					this.copyRow(fallOffPixel.substring(fallOffPixel.length() - (rest + length),
-							fallOffPixel.length() - rest), rotationEntry);
-				}
-				break;
-			case Y:
-				this.copyColumn(fallOffPixel.substring(fallOffPixel.length() - rest, fallOffPixel.length()),
-						rotationEntry);
-				if (fallOffPixel.length() > length) {
-					this.copyColumn(fallOffPixel.substring(fallOffPixel.length() - (rest + length),
-							fallOffPixel.length() - rest), rotationEntry);
-				}
-				break;
 			}
-
 		} else {
-			switch (axis) {
-			case X:
-				this.copyRow(fallOffPixel.substring(fallOffPixel.length() - length, fallOffPixel.length()),
-						rotationEntry);
-				break;
-			case Y:
-				this.copyColumn(fallOffPixel.substring(fallOffPixel.length() - length, fallOffPixel.length()),
-						rotationEntry);
-				break;
-			}
-		}
-	}
-
-	private void copyColumn(String columnValue, int column) {
-		for (int y = 0; y < columnValue.length(); y++) {
-			this.display[y][column] = String.valueOf(columnValue.charAt(y));
-		}
-	}
-
-	private void copyRow(String rowValue, int row) {
-		for (int x = 0; x < rowValue.length(); x++) {
-			this.display[row][x] = String.valueOf(rowValue.charAt(x));
+			this.display = copyFn.apply(fallOffPixel.substring(fallOffPixel.length() - length, fallOffPixel.length()),
+					rotationEntry);
 		}
 	}
 
